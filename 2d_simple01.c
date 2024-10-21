@@ -1,4 +1,3 @@
-
 // open a sequence of .xy  files specified on the commmand line
 // and draw them.
 
@@ -20,7 +19,7 @@ double red[MAX_OBJECTS][MAXPOLYS],grn[MAX_OBJECTS][MAXPOLYS],blu[MAX_OBJECTS][MA
 
 
 
-int read_object(FILE *f, int obj_index){
+int read_object(int obj_index, FILE *f){
 
     // reads number of points from a file
     fscanf(f,"%d",&numpoints[obj_index]) ;
@@ -66,34 +65,6 @@ int read_object(FILE *f, int obj_index){
     }    
 }
 
-int print_object (FILE *fout, int obj_index){
-
-  fprintf(fout, "%d\n",numpoints[obj_index]) ;
-
-  for (int i = 0 ; i < numpoints[obj_index] ; i++) {
-    //12.6 ensures things are printed out with a
-    //width of 12 charactesr includeing 6 decimal
-    fprintf(fout, "%12.6lf %12.6lf\n",x[obj_index][i],y[obj_index][i]) ;
-  }
-  
-
-  for (int i = 0 ; i < numpolys[obj_index] ; i++) {
-    //integer shoud occupy at least three spaces
-    fprintf(fout, "%3d    ",psize[obj_index][i]) ;
-
-    for (int j = 0 ; j < psize[obj_index][i] ; j++) {
-      //integer shoudl occupy at least two spaces
-      fprintf(fout, "%2d ", con[obj_index][i][j]) ; }
-    
-    fprintf(fout, "\n") ;
-  }
-
-
-  for (int i = 0 ; i < numpolys[obj_index] ; i++) {
-    fprintf(fout,"%lf %lf %lf\n",red[obj_index][i],grn[obj_index][i],blu[obj_index][i]) ;
-  }      
-}
-
 
 int draw_object(int obj_index){
   double xp[100], yp[100] ;
@@ -126,7 +97,7 @@ void center_object(int objnum){
   xmin = xmax = x[objnum][0];
   ymin = ymax = y[objnum][0];
   
-
+  //bounding box
   for(int i = 0; i < numpoints[objnum]; i++){
     if(x[objnum][i] < xmin) xmin = x[objnum][i];
     if(x[objnum][i] > xmax) xmax = x[objnum][i];
@@ -135,7 +106,6 @@ void center_object(int objnum){
   }
   
   //transiton center point to orgin (0,0)
-  
   center_x = (xmin + xmax) / 2;
   center_y = (ymin + ymax) / 2;
   
@@ -155,85 +125,50 @@ void center_object(int objnum){
 
 
 void spin_obj(int objnum, double radians){
-  double t, temp, c, s;
-  double xmin, xmax, ymin, ymax;
-  double center_x, center_y;
-  double dx, dy, temp_x, temp_y;
-
-  xmin = xmax = x[objnum][0];
-  ymin = ymax = y[objnum][0];
-  
-
-  for(int i = 0; i < numpoints[objnum]; i++){
-    if(x[objnum][i] < xmin) xmin = x[objnum][i];
-    if(x[objnum][i] > xmax) xmax = x[objnum][i];
-    if(y[objnum][i] < ymin) ymin = y[objnum][i];
-    if(y[objnum][i] > ymax) ymax = y[objnum][i];
-  }
-  
-  //transiton center point to orgin (0,0)
-  
-  center_x = (xmin + xmax) / 2;
-  center_y = (ymin + ymax) / 2;
-  
-  c = cos(radians);
-  s = sin(radians);
+  double t = radians *M_PI/180;
 
   printf("Before rotation: First point (%.2f, %.2f)\n", x[objnum][0], y[objnum][0]);
 
   for (int i = 0; i < numpoints[objnum]; i++) {
-       // Translate point to origin
-    temp_x = x[objnum][i] - center_x;
-    temp_y = y[objnum][i] - center_y;
-        
-        // Rotate point
-    x[objnum][i] = temp_x * c - temp_y * s + center_x;
-    y[objnum][i] = temp_x * s + temp_y * c + center_y;
-    
+    double temp = cos(t) * (x[objnum][i]- 400) - sin(t) * (y[objnum][i] - 400) + 400;
+    y[objnum][i] = (x[objnum][i]- 400) * sin(t) + cos(t) *(y[objnum][i]- 400) + 400;
+    x[objnum][i] = temp;
   }
 }
 
 
-
-
-int main() {
+int main(int argc, char ** argv) {
     FILE *fin;
-    int key, objnum = 0;
+    int key, obj_num;
     char fname[100];
-    double click_point[2];
     int num_objects = 0;
     double spin_angle = 15.0;
 
-    while (num_objects < MAX_OBJECTS) {
-        printf("Enter name of xy file (or 'q' to quit): ");
-        scanf("%s", fname);
-
-        if (fname[0] == 'q') break;
-
-        fin = fopen(fname, "r");
-        if (fin == NULL) {
-            printf("Can't read file: %s\n", fname);
-            continue;
-        }
-
-        read_object(fin, num_objects);
-	center_object(num_objects);
-	//spin_obj(num_objects, 2);
-	
-        //fclose(fin);
-        num_objects++;
+    for(int i = 0; i < argc; i++){
+      if(i + 1 < argc){
+	printf("argv[%d] is %s\n", i + 1, argv[i + 1]);
+      }
     }
 
-    if (num_objects == 0) {
-        printf("No objects loaded. Exiting.\n");
-        return 0;
+    num_objects = argc -  1;
+
+    for(obj_num = 1; obj_num < num_objects + 1; obj_num++){
+       fin = fopen(argv[obj_num], "r") ;
+
+    
+       if (fin == NULL) {
+	 printf("can't read file, %s\n", argv[obj_num]) ;
+	 exit(1) ;
+       }
+       
+       center_object(obj_num - 1);
+       read_object(obj_num - 1, fin);
+       fclose(fin);
     }
 
     G_init_graphics(800, 800);
-
-    // Draw the first object immediately
     G_clear();
-    draw_object(objnum);
+
 
     while (true) {
         key = G_wait_key();
@@ -242,18 +177,19 @@ int main() {
         if (key >= 'a' && key <= 'o') {
             int temp = key - 'a';
             if (temp < num_objects) {
-                objnum = temp;
-                G_rgb(0,0,0);
+                obj_num = temp;
+		G_rgb(0,0,0);
                 G_clear();
-                draw_object(objnum);
+		center_object(obj_num);
+                draw_object(obj_num);
             }
         } 
         else if (key == 's' || key == 'S') {
-            printf("Spinning object %d\n", objnum);
-            spin_obj(objnum, spin_angle * M_PI / 180.0);
+            printf("Spinning object %d\n", obj_num);
+            spin_obj(obj_num, spin_angle);
             G_rgb(0,0,0);
             G_clear();
-            draw_object(objnum);
+            draw_object(obj_num);
             printf("Spin complete\n");
         }
         else if (key == 'q' || key == 'Q') {
@@ -265,6 +201,9 @@ int main() {
     G_close();
     return 0;
 }
+
+
+
 
 
 
