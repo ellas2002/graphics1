@@ -68,7 +68,7 @@ int read_object(int obj_index, FILE *f){
 int draw_object(int obj_index){
   double xpp[100], ypp[100], zpp[100], H, h ;
   int np ;
-  h = 40.0 *M_PI/180;
+  h = 40.0 * M_PI/180;
   
   H  = tan(h);
   
@@ -78,12 +78,9 @@ int draw_object(int obj_index){
     //get vertix coordinates for current polygon
     for (int j = 0 ; j < np ; j++) {
       int n = con[obj_index][i][j] ; // get index of vertex
-      xpp[j] = x[obj_index][n]/ z[obj_index][n]  * (400/H) + 400  ; //store the x coordinate
+      xpp[j] = (x[obj_index][n]/ z[obj_index][n])  * (400/H) + 400  ; //store the x coordinate
       ypp[j] = (y[obj_index][n]/ z[obj_index][n]) * (400/H) + 400 ; //store y coordiante
     }
-
-    //color info:
-    G_rgb(0,1,0) ;
 
     //fill em up
     G_polygon(xpp, ypp, np) ;
@@ -91,8 +88,49 @@ int draw_object(int obj_index){
 }
 
 
+//centers object file file (800,800)
+void center_object(int objnum){
+  double xmin, xmax, ymin, ymax, zmin, zmax;
+  double center_x, center_y, center_z;
+  double dx, dy,dz, sx, sy,nx,ny;
 
-int main(int argc, char ** argv) {
+  //find center of bounding box string min x, min y, max x, maxy
+  xmin = xmax = x[objnum][0];
+  ymin = ymax = y[objnum][0];
+  zmin = zmax = z[objnum][0];
+  
+  
+  for(int i = 0; i < numpoints[objnum]; i++){
+    if(x[objnum][i] < xmin) xmin = x[objnum][i];
+    if(x[objnum][i] > xmax) xmax = x[objnum][i];
+    if(y[objnum][i] < ymin) ymin = y[objnum][i];
+    if(y[objnum][i] > ymax) ymax = y[objnum][i];
+    if(z[objnum][i] < zmin) zmin = z[objnum][i];
+    if(z[objnum][i] > zmax) zmax = z[objnum][i];
+  }
+    
+  center_x = (xmax - xmin) / 2;
+  center_y = (ymax - ymin) / 2;
+  center_z = (zmax - zmin) / 2;
+  
+  dx = center_x + xmin;
+  dy = center_y + ymin;
+  dz = center_z + zmin;
+
+  //matrices functions :)
+
+  M3d_make_identity(matrix);
+  M3d_make_translation(matrix, dx, dy, dz);
+      
+  x[objnum][numpoints[objnum]] = 0;
+  y[objnum][numpoints[objnum]] = 0;
+  z[objnum][numpoints[objnum]] = 0;
+}
+	
+
+
+
+int main(int numFiles, char ** file) {
   FILE *fin;
   int key;
   char fname[100];
@@ -100,46 +138,44 @@ int main(int argc, char ** argv) {
   double spin_angle = 15.0 * M_PI/180;
   double matrix2[4][4], matrix3[4][4];
   int  sign = 1 , action = 't' ;  
-  int  onum = 0 ; // onum marks the current object
+  int  onum = 0 ; 
   int  q, k ;
 
   //reading in files
-  for(int i = 0; i < argc; i++){
-    if(i + 1 < argc){
-      printf("argv[%d] is %s\n", i + 1, argv[i + 1]);
+  for(int i = 0; i < numFiles; i++){
+    if(i + 1 < numFiles){
+      printf("argv[%d] is %s\n", i + 1, file[i + 1]);
     }
   }
 
-  num_objects = argc -  1;
+  num_objects = numFiles -  1;
     
   //open files (read)
   for(onum = 1; onum < num_objects + 1; onum++){
-    fin = fopen(argv[onum], "r") ;
+    fin = fopen(file[onum], "r") ;
 
     //if no files
     if (fin == NULL) {
-      printf("can't read file, %s\n", argv[onum]) ;
+      printf("can't read file, %s\n", file[onum]) ;
       exit(1) ;
     }
-       
+    
     read_object(onum - 1, fin);
+    center_object(onum);
     fclose(fin);
   }
 
   //initialize
   G_init_graphics(800, 800);
   G_clear();
+  G_rgb(1,0,0);
   draw_object(0);
-
   onum = 0;
-  
+
   while (1) {
-    M3d_make_identity(matrix3);
-    M3d_make_identity(matrix2);
     M3d_make_identity(matrix);
 
-    q = G_wait_key() ;
-      
+    q = G_wait_key() ;      
     
     if (q == 'q') { //exit
       exit(0) ;
@@ -175,16 +211,17 @@ int main(int argc, char ** argv) {
     } else if ((q == 'x') && (action == 'r')) { //rotates on x axis
       printf("action: %ls\n", &q);
       M3d_make_translation(matrix,  -x[onum][numpoints[onum]], -y[onum][numpoints[onum]], -z[onum][numpoints[onum]]);
-      M3d_make_x_rotation_cs(matrix2, cos(spin_angle*sign), tan(spin_angle*sign));
+      M3d_make_x_rotation_cs(matrix2, cos(spin_angle * sign), sin(spin_angle * sign));
       M3d_mat_mult(matrix2, matrix2, matrix);
       M3d_make_translation(matrix3,  x[onum][numpoints[onum]], y[onum][numpoints[onum]], z[onum][numpoints[onum]]);
       M3d_mat_mult(matrix, matrix3, matrix2);
+      
 
       
     } else if ((q == 'y') && (action == 'r')) { // rotates on y axis
       printf("action: %ls\n", &q);
       M3d_make_translation(matrix,  -x[onum][numpoints[onum]], -y[onum][numpoints[onum]], -z[onum][numpoints[onum]]);
-      M3d_make_y_rotation_cs(matrix2, cos(spin_angle*sign), tan(spin_angle*sign));
+      M3d_make_y_rotation_cs(matrix2, cos(spin_angle*sign), sin(spin_angle*sign));
       M3d_mat_mult(matrix2, matrix2, matrix);
       M3d_make_translation(matrix3,  x[onum][numpoints[onum]], y[onum][numpoints[onum]], z[onum][numpoints[onum]]);
       M3d_mat_mult(matrix, matrix3, matrix2);
@@ -192,15 +229,13 @@ int main(int argc, char ** argv) {
     } else if ((q == 'z') && (action == 'r')) { // rotates on z axis
       printf("action: %ls\n", &q);
       M3d_make_translation(matrix,  -x[onum][numpoints[onum]], -y[onum][numpoints[onum]], -z[onum][numpoints[onum]]);
-      M3d_make_z_rotation_cs(matrix2, cos(spin_angle*sign), tan(spin_angle*sign));
+      M3d_make_z_rotation_cs(matrix2, cos(spin_angle*sign), sin(spin_angle*sign));
       M3d_mat_mult(matrix2, matrix2, matrix);
       M3d_make_translation(matrix3,  x[onum][numpoints[onum]], y[onum][numpoints[onum]], z[onum][numpoints[onum]]);
       M3d_mat_mult(matrix, matrix3, matrix2);
 
       
-    } else { 
-      printf("no action\n") ;
-    }
+    } else {printf("no action\n") ;}
 
     
     M3d_mat_mult_points (x[onum],y[onum],z[onum],  matrix,
@@ -208,7 +243,7 @@ int main(int argc, char ** argv) {
 
     G_rgb(0,0,0) ; 
     G_clear() ;
-    G_rgb(0,0,1) ;
+    G_rgb(1,0,0) ;
 
     draw_object(onum) ;
   }
