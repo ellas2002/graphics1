@@ -1,0 +1,183 @@
+#include "FPToolkit.c"
+#include <stdio.h>
+
+
+int swidth, sheight ;
+
+int click_and_save (double *x, double *y)
+{
+  int n ;
+  double P[2] ;
+
+  G_rgb(0,1,0.5) ;
+  G_fill_rectangle(0,0,swidth,20) ;
+
+  G_rgb(1,0,0) ;
+  G_wait_click(P);
+
+  n = 0 ;
+  while (P[1] > 20) {
+    x[n] = P[0] ;
+    y[n] = P[1] ;
+    G_circle(x[n],y[n],2) ;
+    if (n > 0) { G_line(x[n-1],y[n-1], x[n],y[n]) ;}
+    n++ ;
+    G_wait_click(P) ;
+  }
+
+  return n ;
+}
+
+
+
+int in_out (double x[], double y[], int n, double P[2])
+// return 1 if point P is inside the convex polygon
+// else return 0
+{
+  for(double ycheck = 0.1; ycheck < 800; ycheck +=0.5){
+    double intersections[100];
+    int counter = 0;
+
+    for(int i = 0; i < n; i++){
+      G_wait_click(P);
+      G_fill_circle(P[0], P[1], 2);
+
+      int j = (i + 1) % n;
+      
+      if ((y[i] <= ycheck && y[j] > ycheck) || (y[j] <= ycheck && y[i] > ycheck)) {
+	double x_intersect = x[i] + (ycheck - y[i]) * (x[j] - x[i]) / (y[j] - y[i]);
+	intersections[counter++] = x_intersect;
+
+      }
+    }
+     // Sort the intersections
+    // sort(intersections, counter);
+    //if (P[0] && P[1] = intersections)
+    // return 1;
+
+     else{return 0;}
+  }
+}
+
+
+
+
+
+/**
+ * TODO: Implement the Sutherland-Hodgman polygon clipping algorithm
+ * Complete the functions below following the pseudocode outlines
+ */
+
+/**
+ * Function 1: Determine if two points lie on same side of a line
+ * 
+ * Parameters:
+ * xCo, yCo, zCo - coefficients of the line equation ax + by + cz + d = 0
+ * c - constant term in the equation
+ * goodPoint[] - reference point coordinates [x,y,z]
+ * testPoint[] - point to test coordinates [x,y,z]
+ * 
+ * Returns: 1 if points on same side, 0 if on opposite sides
+ */
+
+int inOutEquation(double xCo, double yCo, double zCo, double c,
+                  double goodPoint[], double testPoint[]) {
+    // TODO Step 1: Create array to store evaluation results
+  //double results = [];
+    
+    // TODO Step 2: Evaluate line equation for goodPoint
+    // Hint: multiply each coefficient by corresponding coordinate and sum
+    
+    // TODO Step 3: Evaluate line equation for testPoint
+    
+    // TODO Step 4: Compare signs of results and return appropriate value
+    // Hint: multiply results - negative product means opposite sides
+  
+    
+    return 0; // Replace with actual return value
+}
+
+/**
+ * Function 2: Clip a polygon against another polygon
+ * 
+ * Parameters:
+ * polyX[], polyY[] - coordinates of subject polygon vertices
+ * polySize - number of vertices in subject polygon
+ * clipX[], clipY[] - coordinates of clip polygon vertices
+ * clipSize - number of vertices in clip polygon
+ * 
+ * Returns: size of resulting clipped polygon
+ */
+int window(double polyX[], double polyY[], int polySize,
+           double clipX[], double clipY[], int clipSize) {
+    // TODO Step 1: Validate input
+    // Check if clip polygon has at least 3 vertices
+    
+    // TODO Step 2: Declare necessary variables
+    // - Arrays for new polygon coordinates
+    // - Variables for intersection points
+    // - Variables for vertex positions
+    // - Counter for new polygon size
+    
+    // TODO Step 3: For each edge of clip polygon:
+    //   3.1 Calculate center point of clip polygon
+    //   3.2 For each vertex of subject polygon:
+    //       - Get previous vertex (handle wrap-around)
+    //       - Get next clip vertex (handle wrap-around)
+    //       - Calculate line equation coefficients
+    //       - Determine vertex positions relative to clip edge
+    //       - Handle appropriate case:
+    //         * Both vertices inside
+    //         * Moving from inside to outside
+    //         * Moving from outside to inside
+    //         * Both vertices outside
+    //   3.3 Update subject polygon for next iteration
+    
+    // TODO Step 4: Return size of clipped polygon
+    
+    return 0; // Replace with actual return value
+}
+
+/**
+ * Helper function to find intersection of two lines
+ * (Assuming this is already finished)
+ */
+int intersect_2_lines (double A[2], double B[2], double C[2], double D[2], double cross[2]) {
+
+ /*---------------------------------------------*\
+ |  finds the intersection of two infinite lines |
+ |  k = (i+1) % count                            |
+ |  return 1 if intersect and 0 if don't         |
+ |        A[0] = xOne[i] A[1] = yOne[i]          |
+ |        B[0] = xOne[k] B[1] = yOne[k]          |
+ |        C[0] = xTwo[i] C[1] = yTwo[i]          |
+ |        D[0] = xTwo[k] D[1] = yTwo[k]          |
+ \*---------------------------------------------*/
+	                     
+}
+
+// Example usage:
+
+int main()
+{
+  double xp[1000],yp[1000] ;
+  int n,q, c ;
+  int t = 100;
+  double P[2] ;
+
+
+  swidth = 700 ; sheight = 700 ;
+  G_init_graphics(swidth, sheight) ;
+  G_rgb(0,0,0) ;
+  G_clear() ;
+
+  G_rgb(1,0,0) ;
+  n = click_and_save(xp,yp) ;
+  G_rgb(0,1,0) ;
+  G_fill_polygon(xp,yp,n) ;
+  
+
+  c = in_out(xp,yp, t, P); 
+
+  q = G_wait_key() ;
+}

@@ -1,5 +1,6 @@
 #include "../FPToolkit.c"
 
+//Sutherland–Hodgman Algorithm
 
 // saves the clicks the user inputs  
 int click_and_save(double x[], double y[]){
@@ -7,8 +8,7 @@ int click_and_save(double x[], double y[]){
   int n = 0;
 
   while(1){
-      G_wait_click(v);
-      
+      G_wait_click(v); 
       if( v[1] < 40) {break;}
 
       x[n] = v[0];

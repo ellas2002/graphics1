@@ -1,0 +1,42 @@
+#include "../FPToolkit.c"
+#include "M3d_matrix_tools.c"
+#include <stdbool.h>
+#include <math.h>
+#define MAXPTS 59000
+#define MAXPOLYS 57500
+#define MAX_OBJECTS 10
+
+
+int numpoints[MAX_OBJECTS] ;
+int numpolys[MAX_OBJECTS] ;
+int rvs = 1; //reversal factor
+double x[MAX_OBJECTS][MAXPTS] ;
+double y[MAX_OBJECTS][MAXPTS] ;
+double z[MAX_OBJECTS][MAXPTS] ;
+int psize[MAX_OBJECTS][MAXPOLYS] ;
+int con[MAX_OBJECTS][MAXPOLYS][20] ;
+double red[MAX_OBJECTS][MAXPOLYS],grn[MAX_OBJECTS][MAXPOLYS],blu[MAX_OBJECTS][MAXPOLYS] ;
+double matrix[4][4] = {0};
+
+int painters(double xp[], double yp[], double zp[], int n)
+{
+  double np;
+ /*   sort polygons by depth or we can say the largest value of z. */
+  for (int i = 0 ; i < n ; i++) {
+    np = psize[n][i] ; //get number of vertices in this polygon
+    //get vertix coordinates for current polygon
+    for (int j = 0 ; j < np ; j++) {
+      zp[j] = z[np][j];
+      sort(zp[j], np);
+    }
+  }
+
+/* for each polygon p: */
+  for(int i = 0; i < p; i++){
+    /* for each pixel that p covers: */
+    for(int j = 0; j < numpolys[n]; j++){
+      /*paint p.color on pixel */
+      fscanf(f,"%lf",&red[n][i]) ;
+    }
+  }
+}
