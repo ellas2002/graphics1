@@ -74,6 +74,10 @@ void center_object(int objnum)
   dy = center_y + ymin;
   dz = center_z + zmin;
 
+  M3d_make_translation(matrix,  x[objnum][numpoints[objnum]],
+		       y[objnum][numpoints[objnum]],
+		       z[objnum][numpoints[objnum]]);
+
   x[objnum][numpoints[objnum]] = 0;
   y[objnum][numpoints[objnum]] = 0;
   z[objnum][numpoints[objnum]] = 0;
